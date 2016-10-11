@@ -1,0 +1,17 @@
+{
+	"name": "logindummy",
+	"private": "true",
+	"dependencies": {
+		"ngCordova": "latest"
+	},
+	"devDependencies": {
+		"ionic": "driftyco/ionic-bower#1.3.1"
+	},
+	"install": {
+		"path": "www/lib",
+		"sources": {
+			"ionic": "bower_components/ionic/**",
+			"ngCordova": "bower_components/ngCordova/dist/ng-cordova.min.js"
+		}
+	}
+}
