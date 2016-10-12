@@ -413,12 +413,16 @@ angular.module('smartcommunitylab.services.login', [])
 				https://github.com/EddyVerbruggen/cordova-plugin-googleplus
 				*/
 				//'offline': true
-				$window.plugins.googleplus.login({
-						'scopes': 'profile email',
-						'webClientId': CONF.googleplus.login.webClientId
-					},
+				var options = {
+					'scopes': 'profile email'
+				};
+
+				if (ionic.Platform.isAndroid()) {
+					options['webClientId'] = CONF.googleplus.login.webClientId;
+				}
+
+				$window.plugins.googleplus.login(options,
 					function (obj) {
-						// obj.serverAuthCode?
 						if (!!obj.idToken) {
 							console.log('[LOGIN] ' + provider + ' token obtained: ' + obj.idToken);
 							authorizeProvider(obj.idToken).then(
