@@ -8,6 +8,7 @@
         "/home/oscar/Projects/LoginDummyApp/www/js/services/LoginService.js",
         "/home/oscar/Projects/LoginDummyApp/platforms/android/cordova/lib/builders/GenericBuilder.js",
         "/home/oscar/Projects/LoginDummyApp/platforms/android/assets/www/lib/ionic/js/angular/angular-sanitize.js",
-        "/home/oscar/Projects/LoginDummyApp/www/lib/ionic/js/angular/angular.js"
+        "/home/oscar/Projects/LoginDummyApp/www/lib/ionic/js/angular/angular.js",
+        "/Users/admin/Documents/Projects/LoginDummyApp/platforms/ios/www/lib/ionic/js/ionic.min.js"
     ]
 }
