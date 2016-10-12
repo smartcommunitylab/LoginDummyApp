@@ -341,7 +341,7 @@ angular.module('smartcommunitylab.services.login', [])
 			provider = PROVIDER_NATIVE.GOOGLE;
 		}
 
-		var authorizeProviderToken = function (token) {
+		var authorizeProvider = function (token) {
 			var deferred = $q.defer();
 			var processThat = false;
 
@@ -421,7 +421,7 @@ angular.module('smartcommunitylab.services.login', [])
 						// obj.serverAuthCode?
 						if (!!obj.idToken) {
 							console.log('[LOGIN] ' + provider + ' token obtained: ' + obj.idToken);
-							authorizeProviderToken(obj.idToken).then(
+							authorizeProvider(obj.idToken).then(
 								function (code) {
 									getToken(code).then(
 										function (tokenInfo) {
@@ -465,7 +465,7 @@ angular.module('smartcommunitylab.services.login', [])
 				var gotProviderToken = function (response) {
 					console.log('[LOGIN] FACEBOOK RESPONSE ' + JSON.stringify(response));
 					console.log('[LOGIN] ' + provider + ' token obtained: ' + response.authResponse.accessToken);
-					authorizeProviderToken(response.authResponse.accessToken).then(
+					authorizeProvider(response.authResponse.accessToken).then(
 						function (code) {
 							getToken(code).then(
 								function (tokenInfo) {
@@ -507,6 +507,36 @@ angular.module('smartcommunitylab.services.login', [])
 					},
 					function () {
 						facebookLogin();
+					}
+				);
+				break;
+			case service.PROVIDER.GOOGLE:
+				authorizeProvider().then(
+					function (code) {
+						getToken(code).then(
+							function (tokenInfo) {
+								saveToken(tokenInfo);
+								user.provider = provider;
+								console.log('[LOGIN] Logged in with ' + user.provider);
+								remote.getCompleteProfile(user.tokenInfo).then(
+									function (profile) {
+										user.profile = profile;
+										service.localStorage.saveUser();
+										deferred.resolve(profile);
+									},
+									function (reason) {
+										deferred.reject(reason);
+									}
+								);
+							},
+							function (error) {
+								deferred.reject(error);
+							}
+						);
+					},
+					function (reason) {
+						console.log('[LOGIN] ' + reason);
+						deferred.reject(reason);
 					}
 				);
 				break;
