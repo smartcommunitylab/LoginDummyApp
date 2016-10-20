@@ -1,6 +1,6 @@
 angular.module('logindummy.controllers.main', [])
 
-.controller('MainCtrl', function ($scope, $ionicPopup, $ionicLoading, Utils, SCLogin) {
+.controller('MainCtrl', function ($scope, $ionicPopup, $ionicLoading, Utils, LoginService) {
 	//$scope.userProfile;
 
 	$scope.openRegistrationPopup = function () {
@@ -47,7 +47,7 @@ angular.module('logindummy.controllers.main', [])
 				lang: Utils.getLang()
 			};
 
-			SCLogin.register(user).then(
+			LoginService.register(user).then(
 				function () {},
 				function () {}
 			)
@@ -63,7 +63,7 @@ angular.module('logindummy.controllers.main', [])
 
 	$scope.login = function (provider) {
 		$ionicLoading.show();
-		SCLogin.login(provider, $scope.credentials).then(
+		LoginService.login(provider, $scope.credentials).then(
 			function (userProfile) {},
 			function (error) {
 				console.log(error);
@@ -74,8 +74,8 @@ angular.module('logindummy.controllers.main', [])
 	};
 
 	$scope.logout = function () {
-		if (SCLogin.userIsLogged()) {
-			SCLogin.logout().then(
+		if (LoginService.userIsLogged()) {
+			LoginService.logout().then(
 				function () {},
 				function () {}
 			).finally(function () {});
@@ -84,7 +84,7 @@ angular.module('logindummy.controllers.main', [])
 
 	$scope.refresh = function () {
 		$ionicLoading.show();
-		SCLogin.refreshToken().then(
+		LoginService.refreshToken().then(
 			function () {},
 			function () {}
 		).finally(function () {
@@ -93,10 +93,10 @@ angular.module('logindummy.controllers.main', [])
 	};
 
 	$scope.userIsLogged = function () {
-		return SCLogin.userIsLogged();
+		return LoginService.userIsLogged();
 	};
 
 	$scope.getUserProfile = function () {
-		return SCLogin.getUserProfile();
+		return LoginService.getUserProfile();
 	};
 });

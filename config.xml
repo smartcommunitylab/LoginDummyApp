@@ -72,12 +72,5 @@
         <splash src="resources/ios/splash/Default@2x~iphone.png" width="640" height="960" />
         <splash src="resources/ios/splash/Default~iphone.png" width="320" height="480" />
     </platform>
-    <plugin name="cordova-plugin-googleplus" spec="~5.1.1">
-        <variable name="REVERSED_CLIENT_ID" value="com.googleusercontent.apps.29824441110-bea2j3s3r4i4jb4ohqa8l0298fip85cd" />
-    </plugin>
-    <plugin name="cordova-plugin-facebook4" spec="~1.7.4">
-        <variable name="APP_ID" value="1790988937839291" />
-        <variable name="APP_NAME" value="LoginDummyApp" />
-    </plugin>
     <icon src="resources/android/icon/drawable-xhdpi-icon.png" />
 </widget>

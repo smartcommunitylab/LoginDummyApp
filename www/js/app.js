@@ -5,7 +5,7 @@ angular.module('logindummy', [
 	'logindummy.controllers.main'
 ])
 
-.run(function ($ionicPlatform, $window, SCLogin) {
+.run(function ($ionicPlatform, $window, LoginService) {
 	$ionicPlatform.ready(function () {
 		if ($window.cordova && $window.cordova.plugins.Keyboard) {
 			cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
@@ -17,8 +17,8 @@ angular.module('logindummy', [
 		}
 	});
 
-	SCLogin.init({
-		loginType: SCLogin.LOGIN_TYPE.OAUTH,
+	LoginService.init({
+		loginType: LoginService.LOGIN_TYPE.OAUTH,
 		aacUrl: CONF.aacUrl,
 		appLoginUrl: undefined,
 		redirectUrl: CONF.redirectUrl,

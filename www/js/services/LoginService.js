@@ -4,7 +4,7 @@
 
 angular.module('smartcommunitylab.services.login', [])
 
-.factory('SCLogin', function ($rootScope, $q, $http, $window) {
+.factory('LoginService', function ($rootScope, $q, $http, $window) {
 	var service = {};
 
 	var libConfigOK;
@@ -32,7 +32,8 @@ angular.module('smartcommunitylab.services.login', [])
 		ACCOUNT_PROFILE: "/accountprofile/me",
 		TOKEN_URL: "/oauth/token",
 		REGISTER_URL: "/internal/register/rest",
-		REVOKE_URL: "/eauth/revoke/"
+		REVOKE_URL: "/eauth/revoke/",
+		REDIRECT_URL: "http://localhost"
 	};
 
 	//"serverRegisterURL": "/internal/register/rest"
@@ -43,7 +44,6 @@ angular.module('smartcommunitylab.services.login', [])
 		loginType: undefined,
 		aacUrl: undefined,
 		appLoginUrl: undefined,
-		redirectUrl: undefined,
 		clientId: undefined,
 		clientSecret: undefined
 	};
@@ -134,9 +134,6 @@ angular.module('smartcommunitylab.services.login', [])
 		} else if (!newSettings.clientId || !newSettings.clientSecret) {
 			libConfigOK = false;
 			deferred.reject('Invalid client credentials');
-		} else if (!newSettings.redirectUrl) {
-			libConfigOK = false;
-			deferred.reject('Invalid redirectUrl');
 		} else if (!newSettings.loginType) {
 			libConfigOK = false;
 			deferred.reject('Invalid loginType');
@@ -184,7 +181,7 @@ angular.module('smartcommunitylab.services.login', [])
 				'client_id': settings.clientId,
 				'client_secret': settings.clientSecret,
 				'code': code,
-				'redirect_uri': settings.redirectUrl,
+				'redirect_uri': AUTH.REDIRECT_URL,
 				'grant_type': 'authorization_code'
 			}
 		}).then(
@@ -347,7 +344,7 @@ angular.module('smartcommunitylab.services.login', [])
 
 			// Build the OAuth consent page URL
 			var authUrl = settings.aacUrl + AUTH.AUTHORIZE_URL + '/' + provider;
-			authUrl += '?client_id=' + settings.clientId + '&response_type=code' + '&redirect_uri=' + settings.redirectUrl;
+			authUrl += '?client_id=' + settings.clientId + '&response_type=code' + '&redirect_uri=' + AUTH.REDIRECT_URL;
 
 			if (token) {
 				authUrl += '&token=' + token;
