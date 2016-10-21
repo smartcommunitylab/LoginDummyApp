@@ -64,7 +64,9 @@ angular.module('logindummy.controllers.main', [])
 	$scope.login = function (provider) {
 		$ionicLoading.show();
 		LoginService.login(provider, $scope.credentials).then(
-			function (userProfile) {},
+			function (userProfile) {
+				console.log(userProfile);
+			},
 			function (error) {
 				console.log(error);
 			}

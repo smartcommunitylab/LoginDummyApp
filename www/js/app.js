@@ -17,12 +17,28 @@ angular.module('logindummy', [
 		}
 	});
 
-	LoginService.init({
-		loginType: LoginService.LOGIN_TYPE.OAUTH,
+	// AAC
+	var aacInitOptions = {
+		loginType: LoginService.LOGIN_TYPE.AAC,
 		aacUrl: CONF.aacUrl,
-		appLoginUrl: undefined,
-		redirectUrl: CONF.redirectUrl,
 		clientId: CONF.clientId,
 		clientSecret: CONF.clientSecret
-	});
+	};
+
+	// cookie
+	var cookieInitOptions = {
+		loginType: LoginService.LOGIN_TYPE.COOKIE,
+		customConfig: {
+			BASE_URL: 'https://tn.smartcommunitylab.it/carpooling',
+			AUTHORIZE_URI: '/userlogin',
+			SUCCESS_REGEX: /userloginsuccess\?profile=(.+)$/,
+			ERROR_REGEX: /userloginerror\?error=(.+)$/,
+			LOGIN_URI: '/userlogininternal',
+			REGISTER_URI: '/register',
+			REVOKE_URI: '/logout',
+			REDIRECT_URL: 'http://localhost'
+		}
+	};
+
+	LoginService.init(cookieInitOptions);
 });

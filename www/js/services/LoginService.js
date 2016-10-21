@@ -10,7 +10,8 @@ angular.module('smartcommunitylab.services.login', [])
 	var libConfigOK;
 
 	service.LOGIN_TYPE = {
-		OAUTH: 'oauth',
+		AAC: 'oauth',
+		CUSTOM: 'custom',
 		COOKIE: 'cookie'
 	};
 
@@ -26,26 +27,26 @@ angular.module('smartcommunitylab.services.login', [])
 		FACEBOOK: 'facebooklocal'
 	};
 
-	var AUTH = {
-		AUTHORIZE_URL: "/eauth/authorize",
-		BASIC_PROFILE: "/basicprofile/me",
-		ACCOUNT_PROFILE: "/accountprofile/me",
-		TOKEN_URL: "/oauth/token",
-		REGISTER_URL: "/internal/register/rest",
-		REVOKE_URL: "/eauth/revoke/",
+	var AAC = {
+		AUTHORIZE_URI: "/eauth/authorize",
+		SUCCESS_REGEX: /\?code=(.+)$/,
+		ERROR_REGEX: /\?error=(.+)$/,
+		BASIC_PROFILE_URI: "/basicprofile/me",
+		ACCOUNT_PROFILE_URI: "/accountprofile/me",
+		TOKEN_URI: "/oauth/token",
+		REGISTER_URI: "/internal/register/rest",
+		REVOKE_URI: "/eauth/revoke/",
 		REDIRECT_URL: "http://localhost"
 	};
-
-	//"serverRegisterURL": "/internal/register/rest"
 
 	var authWindow = null;
 
 	var settings = {
 		loginType: undefined,
 		aacUrl: undefined,
-		appLoginUrl: undefined,
 		clientId: undefined,
-		clientSecret: undefined
+		clientSecret: undefined,
+		customConfig: undefined
 	};
 
 	var user = {
@@ -96,18 +97,20 @@ angular.module('smartcommunitylab.services.login', [])
 	};
 
 	service.userIsLogged = function () {
-		return (!!user && !!user.provider && !!user.profile && !!user.profile.userId && !!user.tokenInfo);
+		return (!!user && !!user.provider && !!user.profile && !!user.profile.userId && (settings.loginType == service.LOGIN_TYPE.COOKIE ? true : !!user.tokenInfo));
 	};
 
 	var saveToken = function (tokenInfo) {
-		user.tokenInfo = tokenInfo;
-		// set expiry (after removing 1 hr).
-		var t = new Date();
-		t.setSeconds(t.getSeconds() + (user.tokenInfo.expires_in - (60 * 60)));
-		// FIXME only dev purpose
-		//t.setSeconds(t.getSeconds() + 10);
-		// FIXME /only dev purpose
-		user.tokenInfo.validUntil = t;
+		if (!!tokenInfo) {
+			user.tokenInfo = tokenInfo;
+			// set expiry (after removing 1 hr).
+			var t = new Date();
+			t.setSeconds(t.getSeconds() + (user.tokenInfo.expires_in - (60 * 60)));
+			// FIXME only dev purpose
+			//t.setSeconds(t.getSeconds() + 10);
+			// FIXME /only dev purpose
+			user.tokenInfo.validUntil = t;
+		}
 		service.localStorage.saveTokenInfo();
 	};
 
@@ -131,12 +134,6 @@ angular.module('smartcommunitylab.services.login', [])
 		if (!newSettings) {
 			libConfigOK = false;
 			deferred.reject('Invalid settings');
-		} else if (!newSettings.clientId || !newSettings.clientSecret) {
-			libConfigOK = false;
-			deferred.reject('Invalid client credentials');
-		} else if (!newSettings.loginType) {
-			libConfigOK = false;
-			deferred.reject('Invalid loginType');
 		} else {
 			var validLoginType = false;
 			for (var key in service.LOGIN_TYPE) {
@@ -149,12 +146,12 @@ angular.module('smartcommunitylab.services.login', [])
 				libConfigOK = false;
 				deferred.reject('Invalid login type');
 			} else {
-				if (newSettings.loginType == service.LOGIN_TYPE.OAUTH && !newSettings.aacUrl) {
+				if (newSettings.loginType == service.LOGIN_TYPE.AAC && (!newSettings.aacUrl || !newSettings.clientId || !newSettings.clientSecret)) {
 					libConfigOK = false;
-					deferred.reject('AAC URL needed');
-				} else if (newSettings.loginType == service.LOGIN_TYPE.COOKIE && !newSettings.appLoginUrl) {
+					deferred.reject('AAC URL, clientId and clientSecret needed');
+				} else if (newSettings.loginType == service.LOGIN_TYPE.COOKIE && (!newSettings.customConfig || !newSettings.customConfig.BASE_URL || !newSettings.customConfig.AUTHORIZE_URI || !newSettings.customConfig.SUCCESS_REGEX || !newSettings.customConfig.ERROR_REGEX || !newSettings.customConfig.LOGIN_URI || !newSettings.customConfig.REGISTER_URI || !newSettings.customConfig.REVOKE_URI || !newSettings.customConfig.REDIRECT_URL)) {
 					libConfigOK = false;
-					deferred.reject('App auth URL needed');
+					deferred.reject('Complete custom config needed');
 				}
 			}
 		}
@@ -173,15 +170,25 @@ angular.module('smartcommunitylab.services.login', [])
 	/*
 	 * get token using the authorization code
 	 */
-	var getToken = function (code) {
+	var getAACtoken = function (code) {
 		var deferred = $q.defer();
 
-		$http.post(settings.aacUrl + AUTH.TOKEN_URL, null, {
+		var url, redirectUri;
+		if (settings.loginType == service.LOGIN_TYPE.AAC) {
+			url = settings.aacUrl + AAC.TOKEN_URI;
+			redirectUri = AAC.REDIRECT_URL;
+		} else if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
+			// TODO cookie
+			url = settings.customConfig + service.customConfig.TOKEN_URI;
+			redirectUri = settings.customConfig.REDIRECT_URL;
+		}
+
+		$http.post(url, null, {
 			params: {
 				'client_id': settings.clientId,
 				'client_secret': settings.clientSecret,
 				'code': code,
-				'redirect_uri': AUTH.REDIRECT_URL,
+				'redirect_uri': redirectUri,
 				'grant_type': 'authorization_code'
 			}
 		}).then(
@@ -204,10 +211,10 @@ angular.module('smartcommunitylab.services.login', [])
 	/*
 	 * get token using credentials
 	 */
-	var getTokenInternal = function (credentials) {
+	var getAACtokenInternal = function (credentials) {
 		var deferred = $q.defer();
 
-		$http.post(settings.aacUrl + AUTH.TOKEN_URL, null, {
+		$http.post(settings.aacUrl + AAC.TOKEN_URI, null, {
 			params: {
 				'username': credentials.email,
 				'password': credentials.password,
@@ -235,11 +242,11 @@ angular.module('smartcommunitylab.services.login', [])
 		return deferred.promise;
 	};
 
-	var remote = {
+	var remoteAAC = {
 		getBasicProfile: function getBasicProfile(tokenInfo) {
 			var deferred = $q.defer();
 
-			$http.get(settings.aacUrl + AUTH.BASIC_PROFILE, {
+			$http.get(settings.aacUrl + AAC.BASIC_PROFILE_URI, {
 				headers: {
 					'Authorization': 'Bearer ' + tokenInfo.access_token
 				}
@@ -257,7 +264,7 @@ angular.module('smartcommunitylab.services.login', [])
 		getAccountProfile: function getBasicProfile(tokenInfo) {
 			var deferred = $q.defer();
 
-			$http.get(settings.aacUrl + AUTH.ACCOUNT_PROFILE, {
+			$http.get(settings.aacUrl + AAC.ACCOUNT_PROFILE_URI, {
 				headers: {
 					'Authorization': 'Bearer ' + tokenInfo.access_token
 				}
@@ -275,10 +282,10 @@ angular.module('smartcommunitylab.services.login', [])
 		getCompleteProfile: function (tokenInfo) {
 			var deferred = $q.defer();
 
-			remote.getBasicProfile(tokenInfo).then(
+			remoteAAC.getBasicProfile(tokenInfo).then(
 				function (profile) {
 					if (!!profile && !!profile.userId) {
-						remote.getAccountProfile(tokenInfo).then(
+						remoteAAC.getAccountProfile(tokenInfo).then(
 							function (accountProfile) {
 								for (var authority in accountProfile.accounts) {
 									for (var k in accountProfile.accounts[authority]) {
@@ -342,12 +349,20 @@ angular.module('smartcommunitylab.services.login', [])
 			var deferred = $q.defer();
 			var processThat = false;
 
+			var authUrl;
 			// Build the OAuth consent page URL
-			var authUrl = settings.aacUrl + AUTH.AUTHORIZE_URL + '/' + provider;
-			authUrl += '?client_id=' + settings.clientId + '&response_type=code' + '&redirect_uri=' + AUTH.REDIRECT_URL;
-
-			if (token) {
-				authUrl += '&token=' + token;
+			if (settings.loginType == service.LOGIN_TYPE.AAC) {
+				authUrl = settings.aacUrl + AAC.AUTHORIZE_URI + '/' + provider;
+				authUrl += '?client_id=' + settings.clientId + '&response_type=code' + '&redirect_uri=' + AAC.REDIRECT_URL;
+				if (token) {
+					authUrl += '&token=' + token;
+				}
+			} else if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
+				// TODO cookie
+				authUrl = settings.customConfig.BASE_URL + settings.customConfig.AUTHORIZE_URI + '/' + provider;
+				if (token) {
+					authUrl += '?token=' + encodeURIComponent(token);
+				}
 			}
 
 			// Open the OAuth consent page in the InAppBrowser
@@ -357,8 +372,16 @@ angular.module('smartcommunitylab.services.login', [])
 			}
 
 			var processURL = function (url, deferred, w) {
-				var success = /\?code=(.+)$/.exec(url);
-				var error = /\?error=(.+)$/.exec(url);
+				var success, error;
+
+				if (settings.loginType == service.LOGIN_TYPE.AAC) {
+					success = AAC.SUCCESS_REGEX.exec(url);
+					error = AAC.ERROR_REGEX.exec(url);
+				} else if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
+					// TODO cookie
+					success = settings.customConfig.SUCCESS_REGEX.exec(url);
+					error = settings.customConfig.ERROR_REGEX.exec(url);
+				}
 
 				if (w && (success || error)) {
 					// Always close the browser when match is found
@@ -367,14 +390,23 @@ angular.module('smartcommunitylab.services.login', [])
 				}
 
 				if (success) {
-					var code = success[1];
-					if (code.substring(code.length - 1) == '#') {
-						code = code.substring(0, code.length - 1);
+					if (settings.loginType == service.LOGIN_TYPE.AAC) {
+						var code = success[1];
+						if (code.substring(code.length - 1) == '#') {
+							code = code.substring(0, code.length - 1);
+						}
+						console.log('[LOGIN] AAC code obtained');
+						deferred.resolve(code);
+					} else if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
+						// TODO cookie
+						var str = success[1];
+						if (str.indexOf('#') != -1) {
+							str = str.substring(0, str.indexOf('#'));
+						}
+						var profile = JSON.parse(decodeURIComponent(str));
+						console.log('[LOGIN] profile obtained');
+						deferred.resolve(profile);
 					}
-
-					//console.log('[LOGIN] AAC code obtained: ' + decodeURIComponent(code));
-					console.log('[LOGIN] AAC code obtained');
-					deferred.resolve(code);
 				} else if (error) {
 					//The user denied access to the app
 					deferred.reject({
@@ -411,40 +443,56 @@ angular.module('smartcommunitylab.services.login', [])
 				*/
 				//'offline': true
 				var options = {
-					'scopes': 'profile email'
+					'scopes': 'profile email',
+					'offline': true
 				};
 
 				if (ionic.Platform.isAndroid()) {
 					options['webClientId'] = CONF.googleplus.login.webClientId;
 				}
 
+				var successCallback;
+				if (settings.loginType == service.LOGIN_TYPE.AAC) {
+					successCallback = function (code) {
+						getAACtoken(code).then(
+							function (tokenInfo) {
+								saveToken(tokenInfo);
+								user.provider = provider;
+								console.log('[LOGIN] Logged in with ' + user.provider);
+								remoteAAC.getCompleteProfile(user.tokenInfo).then(
+									function (profile) {
+										user.profile = profile;
+										service.localStorage.saveUser();
+										deferred.resolve(profile);
+									},
+									function (reason) {
+										deferred.reject(reason);
+									}
+								);
+							},
+							function (error) {
+								deferred.reject(error);
+							}
+						);
+					};
+				} else if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
+					// TODO cookie
+					successCallback = function (profile) {
+						saveToken();
+						user.provider = provider;
+						console.log('[LOGIN] Logged in with ' + user.provider);
+						user.profile = profile;
+						service.localStorage.saveUser();
+						deferred.resolve(profile);
+					}
+				}
+
 				$window.plugins.googleplus.login(options,
 					function (obj) {
 						if (!!obj.idToken) {
+							// or obj.serverAuthCode?
 							console.log('[LOGIN] ' + provider + ' token obtained: ' + obj.idToken);
-							authorizeProvider(obj.idToken).then(
-								function (code) {
-									getToken(code).then(
-										function (tokenInfo) {
-											saveToken(tokenInfo);
-											user.provider = provider;
-											console.log('[LOGIN] Logged in with ' + user.provider);
-											remote.getCompleteProfile(user.tokenInfo).then(
-												function (profile) {
-													user.profile = profile;
-													service.localStorage.saveUser();
-													deferred.resolve(profile);
-												},
-												function (reason) {
-													deferred.reject(reason);
-												}
-											);
-										},
-										function (error) {
-											deferred.reject(error);
-										}
-									);
-								},
+							authorizeProvider(obj.idToken).then(successCallback,
 								function (reason) {
 									console.log('[LOGIN] ' + reason);
 									deferred.reject(reason);
@@ -463,32 +511,47 @@ angular.module('smartcommunitylab.services.login', [])
 				Uses the cordova-plugin-facebook4 plugin
 				https://github.com/jeduan/cordova-plugin-facebook4
 				*/
+
+				var successCallback;
+				if (settings.loginType == service.LOGIN_TYPE.AAC) {
+					successCallback = function (code) {
+						getAACtoken(code).then(
+							function (tokenInfo) {
+								saveToken(tokenInfo);
+								user.provider = provider;
+								console.log('[LOGIN] Logged in with ' + user.provider);
+								remoteAAC.getCompleteProfile(user.tokenInfo).then(
+									function (profile) {
+										user.profile = profile;
+										service.localStorage.saveUser();
+										deferred.resolve(profile);
+									},
+									function (reason) {
+										deferred.reject(reason);
+									}
+								);
+							},
+							function (error) {
+								deferred.reject(error);
+							}
+						);
+					};
+				} else if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
+					// TODO cookie
+					successCallback = function (profile) {
+						saveToken();
+						user.provider = provider;
+						console.log('[LOGIN] Logged in with ' + user.provider);
+						user.profile = profile;
+						service.localStorage.saveUser();
+						deferred.resolve(profile);
+					}
+				}
+
 				var gotProviderToken = function (response) {
 					console.log('[LOGIN] FACEBOOK RESPONSE ' + JSON.stringify(response));
 					console.log('[LOGIN] ' + provider + ' token obtained: ' + response.authResponse.accessToken);
-					authorizeProvider(response.authResponse.accessToken).then(
-						function (code) {
-							getToken(code).then(
-								function (tokenInfo) {
-									saveToken(tokenInfo);
-									user.provider = provider;
-									console.log('[LOGIN] logged in with ' + user.provider);
-									remote.getCompleteProfile(user.tokenInfo).then(
-										function (profile) {
-											user.profile = profile;
-											service.localStorage.saveUser();
-											deferred.resolve(profile);
-										},
-										function (reason) {
-											deferred.reject(reason);
-										}
-									);
-								},
-								function (error) {
-									deferred.reject(error);
-								}
-							);
-						},
+					authorizeProvider(response.authResponse.accessToken).then(successCallback,
 						function (reason) {
 							console.log('[LOGIN] ' + reason);
 							deferred.reject(reason);
@@ -514,12 +577,12 @@ angular.module('smartcommunitylab.services.login', [])
 			case service.PROVIDER.GOOGLE:
 				authorizeProvider().then(
 					function (code) {
-						getToken(code).then(
+						getAACtoken(code).then(
 							function (tokenInfo) {
 								saveToken(tokenInfo);
 								user.provider = provider;
 								console.log('[LOGIN] Logged in with ' + user.provider);
-								remote.getCompleteProfile(user.tokenInfo).then(
+								remoteAAC.getCompleteProfile(user.tokenInfo).then(
 									function (profile) {
 										user.profile = profile;
 										service.localStorage.saveUser();
@@ -542,34 +605,59 @@ angular.module('smartcommunitylab.services.login', [])
 				);
 				break;
 			case service.PROVIDER.INTERNAL:
-				/*
-				Uses the internal AAC sign-in system
-				*/
 				if (!credentials || !credentials.email || !credentials.password) {
 					deferred.reject('Invalid credentials');
 					break;
 				}
 
-				getTokenInternal(credentials).then(
-					function (tokenInfo) {
-						saveToken(tokenInfo);
-						user.provider = provider;
-						console.log('[LOGIN] logged in with ' + user.provider);
-						remote.getCompleteProfile(user.tokenInfo).then(
-							function (profile) {
-								user.profile = profile;
-								service.localStorage.saveUser();
-								deferred.resolve(profile);
-							},
-							function (reason) {
-								deferred.reject(reason);
-							}
-						);
-					},
-					function (reason) {
-						deferred.reject(reason);
-					}
-				);
+				if (settings.loginType == service.LOGIN_TYPE.AAC) {
+					/*
+					Uses the internal AAC sign-in system
+					*/
+					getAACtokenInternal(credentials).then(
+						function (tokenInfo) {
+							saveToken(tokenInfo);
+							user.provider = provider;
+							console.log('[LOGIN] logged in with ' + user.provider);
+							remoteAAC.getCompleteProfile(user.tokenInfo).then(
+								function (profile) {
+									user.profile = profile;
+									service.localStorage.saveUser();
+									deferred.resolve(profile);
+								},
+								function (reason) {
+									deferred.reject(reason);
+								}
+							);
+						},
+						function (reason) {
+							deferred.reject(reason);
+						}
+					);
+				} else if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
+					// TODO cookie
+					$http.get(settings.customConfig.BASE_URL + settings.customConfig.LOGIN_URI, {
+						params: {
+							email: credentials.email,
+							password: credentials.password
+						},
+						headers: {
+							'Accept': 'application/json',
+						}
+					}).then(
+						function (response) {
+							saveToken();
+							user.provider = provider;
+							console.log('[LOGIN] logged in with ' + user.provider);
+							user.profile = response.data;
+							service.localStorage.saveUser();
+							deferred.resolve(response.data);
+						},
+						function (reason) {
+							deferred.reject(reason);
+						}
+					);
+				}
 				break;
 			default:
 				deferred.reject('Provider "' + provider + '" still unsupported.');
@@ -580,7 +668,7 @@ angular.module('smartcommunitylab.services.login', [])
 
 	var refreshTokenDeferred = null;
 	var refreshTokenTimestamp = null;
-	service.refreshToken = function () {
+	service.refreshAACtoken = function () {
 		// 10 seconds
 		if (!!refreshTokenDeferred && ((new Date().getTime()) < (refreshTokenTimestamp + (1000 * 10)))) {
 			console.log('[LOGIN] use recent refreshToken deferred!');
@@ -597,7 +685,7 @@ angular.module('smartcommunitylab.services.login', [])
 			if (validUntil.getTime() >= now.getTime() + (60 * 60 * 1000)) {
 				refreshTokenDeferred.resolve(user.tokenInfo.access_token);
 			} else {
-				$http.post(settings.aacUrl + AUTH.TOKEN_URL, null, {
+				$http.post(settings.aacUrl + AAC.TOKEN_URI, null, {
 					params: {
 						'client_id': settings.clientId,
 						'client_secret': settings.clientSecret,
@@ -634,7 +722,7 @@ angular.module('smartcommunitylab.services.login', [])
 	service.logout = function () {
 		var deferred = $q.defer();
 
-		if (settings.loginType == service.LOGIN_TYPE.OAUTH) {
+		if (settings.loginType == service.LOGIN_TYPE.AAC || settings.loginType == service.LOGIN_TYPE.COOKIE) {
 			switch (user.provider) {
 				case PROVIDER_NATIVE.GOOGLE:
 					$window.plugins.googleplus.logout(
@@ -643,7 +731,7 @@ angular.module('smartcommunitylab.services.login', [])
 							console.log('[LOGIN] ' + PROVIDER_NATIVE.GOOGLE + ' logout successfully (' + msg + ')');
 							deferred.resolve(msg);
 						},
-						function () {
+						function (error) {
 							deferred.reject();
 						}
 					);
@@ -655,13 +743,14 @@ angular.module('smartcommunitylab.services.login', [])
 							console.log('[LOGIN] ' + PROVIDER_NATIVE.FACEBOOK + ' logout successfully');
 							deferred.resolve();
 						},
-						function () {
+						function (error) {
 							deferred.reject();
 						}
 					);
 					break;
 				case service.PROVIDER.INTERNAL:
-					$http.get(settings.aacUrl + AUTH.REVOKE_URL + user.tokenInfo.access_token, {
+
+					$http.get(settings.aacUrl + AAC.REVOKE_URI + user.tokenInfo.access_token, {
 						headers: {
 							'Authorization': 'Bearer ' + user.tokenInfo.access_token
 						}
@@ -701,7 +790,7 @@ angular.module('smartcommunitylab.services.login', [])
 
 			CacheSrv.reset();
 
-			$http.get(settings.appLoginUrl + AUTH.LOGOUT_URL, {
+			$http.get(settings.appLoginUrl + AAC.LOGOUT_URL, {
 				headers: {
 					'Accept': 'application/json',
 					'Content-Type': 'application/json'
@@ -731,7 +820,9 @@ angular.module('smartcommunitylab.services.login', [])
 			return deferred.promise;
 		}
 
-		$http.post(settings.aacUrl + AUTH.REGISTER_URL, user, {
+
+
+		$http.post(settings.aacUrl + AAC.REGISTER_URI, user, {
 			params: {
 				'client_id': settings.clientId,
 				'client_secret': settings.clientSecret,

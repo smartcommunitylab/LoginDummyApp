@@ -31,15 +31,41 @@ You need to initialize the service before using it using the function ```LoginSe
 {
 	loginType: LoginService.LOGIN_TYPE,
 	aacUrl: <string>,
-	appLoginUrl: <string>,
 	clientId: <string>,
-	clientSecret: <string>
+	clientSecret: <string>,
+	cookieConfig: <string>
 }
 ```
 
-The possible values are:
-* ```LoginService.LOGIN_TYPE.OAUTH```: you need to provide a ```aacUrl```
-* ```LoginService.LOGIN_TYPE.COOKIE```: you need to provide a ```appLoginUrl``` for the custom handling of the token
+The possible ```LoginService.LOGIN_TYPE``` values are:
+* ```LoginService.LOGIN_TYPE.AAC```: you need to provide the ```aacUrl```, the ```clientId``` and the ```clientSecret```
+* ```LoginService.LOGIN_TYPE.COOKIE```: you need to provide a ```cookieConfig``` object
+
+The ```cookieConfig``` object has to contain the URLs for the authentication operations
+```javascript
+{
+	BASE_URL: <string>,
+	AUTHORIZE_URI: <string>,
+	SUCCESS_REGEX: <regex>,
+	ERROR_REGEX: <regex>,
+	LOGIN_URI: <string>,
+	REGISTER_URI: <string>,
+	REVOKE_URI: <string>,
+	REDIRECT_URL: <string>
+}
+```
+These options are explained in this table:
+
+Option | Description
+------ | -----------
+BASE_URL | The base URL. <br> e.g. _http://dev.smartcommunitylab.it/customapp_
+AUTHORIZE_URI | The URI where the token is authorized <br> e.g. _/userlogin_
+SUCCESS_REGEX | The regex used to control the URL of the authorize success response <br> e.g. _/userloginsuccess\?profile=(.+)$/_
+ERROR_REGEX | The regex used to control the URL of the authorize error response <br> e.g. _/userloginerror\?error=(.+)$/_
+LOGIN_URI | The URI used for interal login <br> e.g. _/userlogininternal_
+REGISTER_URI | The URI for the internal registration  <br> e.g. _/register_
+REVOKE_URI | The URI to use for token revoke <br> e.g. _/revoke_
+REDIRECT_URL | The redirect URL <br> e.g. _http://localhost_
 
 ## Login
 You can login using the ```LoginService.login(provider, credentials)``` function that returns a promise. There's an example:
@@ -57,7 +83,7 @@ where ```credentials``` is an optional object with this structure:
 }
 ```
 
-The provider can be one of these values:
+The provider can be one of these ```LoginService.PROVIDER``` values:
 * ```LoginService.PROVIDER.GOOGLE```
 * ```LoginService.PROVIDER.FACEBOOK```
 * ```LoginService.PROVIDER.INTERNAL``` (it makes ```credentials``` mandatory)
