@@ -178,7 +178,6 @@ angular.module('smartcommunitylab.services.login', [])
 			url = settings.aacUrl + AAC.TOKEN_URI;
 			redirectUri = AAC.REDIRECT_URL;
 		} else if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
-			// TODO cookie
 			url = settings.customConfig + service.customConfig.TOKEN_URI;
 			redirectUri = settings.customConfig.REDIRECT_URL;
 		}
@@ -635,7 +634,6 @@ angular.module('smartcommunitylab.services.login', [])
 						}
 					);
 				} else if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
-					// TODO cookie
 					$http.get(settings.customConfig.BASE_URL + settings.customConfig.LOGIN_URI, {
 						params: {
 							email: credentials.email,
@@ -668,7 +666,10 @@ angular.module('smartcommunitylab.services.login', [])
 
 	var refreshTokenDeferred = null;
 	var refreshTokenTimestamp = null;
-	service.refreshAACtoken = function () {
+	/*
+	 * GET (REFRESHING FIRST IF NEEDED) AAC TOKEN
+	 */
+	service.getValidAACtoken = function () {
 		// 10 seconds
 		if (!!refreshTokenDeferred && ((new Date().getTime()) < (refreshTokenTimestamp + (1000 * 10)))) {
 			console.log('[LOGIN] use recent refreshToken deferred!');
@@ -698,7 +699,7 @@ angular.module('smartcommunitylab.services.login', [])
 							console.log('[LOGIN] AAC token refreshed');
 							saveToken(response.data);
 							service.localStorage.saveTokenInfo();
-							refreshTokenDeferred.resolve();
+							refreshTokenDeferred.resolve(response.data.access_token);
 						} else {
 							resetUser();
 							console.log('[LOGIN] invalid refresh_token');
@@ -719,6 +720,9 @@ angular.module('smartcommunitylab.services.login', [])
 		return refreshTokenDeferred.promise;
 	};
 
+	/*
+	 * LOGOUT
+	 */
 	service.logout = function () {
 		var deferred = $q.defer();
 
@@ -729,6 +733,11 @@ angular.module('smartcommunitylab.services.login', [])
 						function (msg) {
 							resetUser();
 							console.log('[LOGIN] ' + PROVIDER_NATIVE.GOOGLE + ' logout successfully (' + msg + ')');
+							if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
+								$window.cookies.clear(function () {
+									console.log('[LOGIN] Cookies cleared!');
+								});
+							}
 							deferred.resolve(msg);
 						},
 						function (error) {
@@ -741,6 +750,11 @@ angular.module('smartcommunitylab.services.login', [])
 						function () {
 							resetUser();
 							console.log('[LOGIN] ' + PROVIDER_NATIVE.FACEBOOK + ' logout successfully');
+							if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
+								$window.cookies.clear(function () {
+									console.log('[LOGIN] Cookies cleared!');
+								});
+							}
 							deferred.resolve();
 						},
 						function (error) {
@@ -749,7 +763,6 @@ angular.module('smartcommunitylab.services.login', [])
 					);
 					break;
 				case service.PROVIDER.INTERNAL:
-
 					$http.get(settings.aacUrl + AAC.REVOKE_URI + user.tokenInfo.access_token, {
 						headers: {
 							'Authorization': 'Bearer ' + user.tokenInfo.access_token
@@ -758,8 +771,12 @@ angular.module('smartcommunitylab.services.login', [])
 						function (response) {
 							resetUser();
 							console.log('[LOGIN] ' + service.PROVIDER.INTERNAL + ' logout successfully (token revoked)');
+							if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
+								$window.cookies.clear(function () {
+									console.log('[LOGIN] Cookies cleared!');
+								});
+							}
 							deferred.resolve(response.data);
-
 						},
 						function (reason) {
 							deferred.reject(reason);
@@ -768,7 +785,7 @@ angular.module('smartcommunitylab.services.login', [])
 					break;
 				default:
 			}
-		} else if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
+		} else if (settings.loginType == service.LOGIN_TYPE.CUSTOM) {
 			/*
 			var complete = function (response) {
 				StorageSrv.reset().then(function () {

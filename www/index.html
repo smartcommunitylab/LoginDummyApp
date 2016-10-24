@@ -60,7 +60,7 @@
                     <button class="button button-block button-positive icon ion-social-facebook" ng-disabled="userIsLogged()" ng-click="login('facebook')"></button>
                 </div>
                 <div class="col">
-                    <button class="button button-block button-balanced icon ion-refresh" ng-disabled="!userIsLogged()" ng-click="refresh()"></button>
+                    <button class="button button-block button-balanced icon ion-refresh" ng-disabled="!userIsLogged()" ng-click="getValidToken()"></button>
                 </div>
                 <div class="col">
                     <button class="button button-block button-dark icon ion-log-out" ng-disabled="!userIsLogged()" ng-click="logout()"></button>

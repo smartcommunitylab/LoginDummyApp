@@ -84,9 +84,9 @@ angular.module('logindummy.controllers.main', [])
 		}
 	};
 
-	$scope.refresh = function () {
+	$scope.getValidToken = function () {
 		$ionicLoading.show();
-		LoginService.refreshToken().then(
+		LoginService.getValidAACtoken().then(
 			function () {},
 			function () {}
 		).finally(function () {

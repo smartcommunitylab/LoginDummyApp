@@ -7,9 +7,11 @@ It permits login with:
 * Facebook (native if the Facebook app is installed, the form otherwise)
 
 ## Dependencies
-In order to use native login for Google and Facebook these Cordova plugins are required:
+In order to use the plugin these Cordova plugins are required:
 * **cordova-plugin-googleplus** https://github.com/EddyVerbruggen/cordova-plugin-googleplus
 * **cordova-plugin-facebook4** https://github.com/jeduan/cordova-plugin-facebook4
+* **cordova-remove-cookies** https://github.com/bez4pieci/Phonegap-Cookies-Plugin
+
 
 ## Setting up
 Install the required plugins (see Dependencies) and include the LoginService.js file in your `index.html` file:
