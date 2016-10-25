@@ -43,6 +43,7 @@ angular.module('smartcommunitylab.services.login', [])
 
 	var settings = {
 		loginType: undefined,
+		googleWebClientId: undefined,
 		aacUrl: undefined,
 		clientId: undefined,
 		clientSecret: undefined,
@@ -58,7 +59,7 @@ angular.module('smartcommunitylab.services.login', [])
 	service.localStorage = {
 		PROVIDER: 'user_provider',
 		PROFILE: 'user_profile',
-		TOKENINFO: 'user_tokeInfo',
+		TOKENINFO: 'user_tokenInfo',
 		getProvider: function () {
 			return JSON.parse($window.localStorage.getItem(this.PROVIDER));
 		},
@@ -447,7 +448,12 @@ angular.module('smartcommunitylab.services.login', [])
 				};
 
 				if (ionic.Platform.isAndroid()) {
-					options['webClientId'] = CONF.googleplus.login.webClientId;
+					if (!!settings.googleWebClientId) {
+						options['webClientId'] = settings.googleWebClientId;
+					} else {
+						deferred.reject('webClientId mandatory for googlenative on Android');
+						return deferred.promise;
+					}
 				}
 
 				var successCallback;

@@ -32,12 +32,14 @@ You need to initialize the service before using it using the function ```LoginSe
 ```javascript
 {
 	loginType: LoginService.LOGIN_TYPE,
+	googleWebClientId: <string>
 	aacUrl: <string>,
 	clientId: <string>,
 	clientSecret: <string>,
 	cookieConfig: <string>
 }
 ```
+On Android the ```googleWebClientId``` is **mandatory**.
 
 The possible ```LoginService.LOGIN_TYPE``` values are:
 * ```LoginService.LOGIN_TYPE.AAC```: you need to provide the ```aacUrl```, the ```clientId``` and the ```clientSecret```
