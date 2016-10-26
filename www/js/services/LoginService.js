@@ -150,7 +150,7 @@ angular.module('smartcommunitylab.services.login', [])
 				if (newSettings.loginType == service.LOGIN_TYPE.AAC && (!newSettings.aacUrl || !newSettings.clientId || !newSettings.clientSecret)) {
 					libConfigOK = false;
 					deferred.reject('AAC URL, clientId and clientSecret needed');
-				} else if (newSettings.loginType == service.LOGIN_TYPE.COOKIE && (!newSettings.customConfig || !newSettings.customConfig.BASE_URL || !newSettings.customConfig.AUTHORIZE_URI || !newSettings.customConfig.SUCCESS_REGEX || !newSettings.customConfig.ERROR_REGEX || !newSettings.customConfig.LOGIN_URI || !newSettings.customConfig.REGISTER_URI || !newSettings.customConfig.REVOKE_URI || !newSettings.customConfig.REDIRECT_URL)) {
+				} else if (newSettings.loginType == service.LOGIN_TYPE.COOKIE && (!newSettings.customConfig || !newSettings.customConfig.BASE_URL || !newSettings.customConfig.AUTHORIZE_URI || !newSettings.customConfig.SUCCESS_REGEX || !newSettings.customConfig.ERROR_REGEX || !newSettings.customConfig.REVOKE_URI || !newSettings.customConfig.REDIRECT_URL)) {
 					libConfigOK = false;
 					deferred.reject('Complete custom config needed');
 				}
@@ -842,8 +842,6 @@ angular.module('smartcommunitylab.services.login', [])
 			deferred.reject();
 			return deferred.promise;
 		}
-
-
 
 		$http.post(settings.aacUrl + AAC.REGISTER_URI, user, {
 			params: {
