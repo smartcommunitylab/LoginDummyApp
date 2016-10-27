@@ -12,13 +12,20 @@ In order to use the plugin these Cordova plugins are required:
 * **cordova-plugin-facebook4** https://github.com/jeduan/cordova-plugin-facebook4
 * **cordova-remove-cookies** https://github.com/bez4pieci/Phonegap-Cookies-Plugin
 
+### cordova-plugin-googleplus
+On your [Google Developer Console](https://console.developers.google.com/apis/credentials) you need to create three OAuth client IDs: _android_ and _iOS_ just to <u>enable the platforms</u>, ***web application*** as ```webClientId``` (used for Google) and as ```REVERSED_CLIENT_ID``` (writing it reversed...) used in the ```package.json``` when you configure the plugin. Just to be clear:
+* **webClientId**: ```123456789012-ab1cd2ef3gh4ij5kl6mn7op8qr9st0uv.apps.googleusercontent.com```
+* **REVERSED_CLIEND_ID**: ```com.googleusercontent.apps.123456789012-ab1cd2ef3gh4ij5kl6mn7op8qr9st0uv```
+
+### cordova-plugin-facebook4
+On your [Facebook for developers Console](https://developers.facebook.com/apps/) you need to create a new app, <u>enable Android and iOS platforms</u> for the login and make it public or eventually add allowed accounts. Then in the ```package.json``` add app name and app ID (as the instructions say).
 
 ## Setting up
-Install the required plugins (see Dependencies) and include the LoginService.js file in your `index.html` file:
+When you installed the required plugins (see Dependencies) you have to include the LoginService.js file in your `index.html` file:
 ```javascript
 <script src="<path>/<to>/LoginService.js"></script>
 ```
-Then add it to the controller you want:
+Then inject it:
 ```javascript
 angular.module('myapp', [
 	'...',
@@ -39,7 +46,7 @@ You need to initialize the service before using it using the function ```LoginSe
 	cookieConfig: <string>
 }
 ```
-On Android the ```googleWebClientId``` is **mandatory**.
+For Android the ```googleWebClientId``` is **mandatory**.
 
 The possible ```LoginService.LOGIN_TYPE``` values are:
 * ```LoginService.LOGIN_TYPE.AAC```: you need to provide the ```aacUrl```, the ```clientId``` and the ```clientSecret```
