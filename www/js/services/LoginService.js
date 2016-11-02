@@ -35,6 +35,7 @@ angular.module('smartcommunitylab.services.login', [])
 		ACCOUNT_PROFILE_URI: "/accountprofile/me",
 		TOKEN_URI: "/oauth/token",
 		REGISTER_URI: "/internal/register/rest",
+		RESET_URI: "/internal/reset",
 		REVOKE_URI: "/eauth/revoke/",
 		REDIRECT_URL: "http://localhost"
 	};
@@ -862,6 +863,62 @@ angular.module('smartcommunitylab.services.login', [])
 		);
 
 		return deferred.promise;
+	};
+
+	var getLang = function () {
+		var browserLanguage = '';
+		// works for earlier version of Android (2.3.x)
+		var androidLang;
+		if ($window.navigator && $window.navigator.userAgent && (androidLang = $window.navigator.userAgent.match(/android.*\W(\w\w)-(\w\w)\W/i))) {
+			browserLanguage = androidLang[1];
+		} else {
+			// works for iOS, Android 4.x and other devices
+			browserLanguage = $window.navigator.userLanguage || $window.navigator.language;
+		}
+
+		var lang = browserLanguage.substring(0, 2);
+		if (lang != 'it' && lang != 'en' && lang != 'de') {
+			lang = 'en'
+		};
+
+		return lang;
+	};
+
+	/*
+	 * reset password
+	 */
+	service.resetPassword = function (email) {
+		// if email is provided call the endpoint
+		var url;
+
+		if (settings.loginType == service.LOGIN_TYPE.AAC) {
+			url = settings.aacUrl + AAC.RESET_URI;
+		} else if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
+			url = settings.customConfig.RESET_URL;
+		} else {
+			return;
+		}
+
+		if (!email || !isEmailValid(email)) {
+			$window.open(url + '?lang=' + getLang(), '_system', 'location=no,toolbar=no');
+		} else {
+			var deferred = $q.defer();
+
+			$http.post(url, {}, {
+				params: {
+					'email': email
+				}
+			}).then(
+				function (response) {
+					deferred.resolve();
+				},
+				function (reason) {
+					deferred.reject(reason);
+				}
+			);
+
+			return deferred.promise;
+		}
 	};
 
 	service.getUserProfile = function () {

@@ -36,6 +36,7 @@ angular.module('logindummy', [
 			LOGIN_URI: '/userlogininternal',
 			REGISTER_URI: '/register',
 			REVOKE_URI: '/logout',
+			RESET_URL: 'https://tn.smartcommunitylab.it/carpooling/internal/reset',
 			REDIRECT_URL: 'http://localhost'
 		}
 	};

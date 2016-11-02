@@ -61,6 +61,7 @@ The ```cookieConfig``` object has to contain the URLs for the authentication ope
 	ERROR_REGEX: <regex>,
 	LOGIN_URI: <string>,
 	REGISTER_URI: <string>,
+	RESET_URI: <string>,
 	REVOKE_URI: <string>,
 	REDIRECT_URL: <string>
 }
@@ -74,8 +75,9 @@ AUTHORIZE_URI | The URI where the token is authorized <br> e.g. _/userlogin_
 SUCCESS_REGEX | The regex used to control the URL of the authorize success response <br> e.g. _/userloginsuccess\?profile=(.+)$/_
 ERROR_REGEX | The regex used to control the URL of the authorize error response <br> e.g. _/userloginerror\?error=(.+)$/_
 LOGIN_URI | The URI used for interal login <br> e.g. _/userlogininternal_
-REGISTER_URI | The URI for the internal registration  <br> e.g. _/register_
+REGISTER_URI | The URI for the internal registration <br> e.g. _/register_
 REVOKE_URI | The URI to use for token revoke <br> e.g. _/revoke_
+RESET_URL | The URL (NOT relative) for the internal reset password request (to be opened in a window or the endpoind) <br> e.g. _http://dev.smartcommunitylab.it/customapp/internal/reset_
 REDIRECT_URL | The redirect URL <br> e.g. _http://localhost_
 
 ## Login
