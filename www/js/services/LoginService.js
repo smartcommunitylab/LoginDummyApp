@@ -151,7 +151,7 @@ angular.module('smartcommunitylab.services.login', [])
 				if (newSettings.loginType == service.LOGIN_TYPE.AAC && (!newSettings.aacUrl || !newSettings.clientId || !newSettings.clientSecret)) {
 					libConfigOK = false;
 					deferred.reject('AAC URL, clientId and clientSecret needed');
-				} else if (newSettings.loginType == service.LOGIN_TYPE.COOKIE && (!newSettings.customConfig || !newSettings.customConfig.BASE_URL || !newSettings.customConfig.AUTHORIZE_URI || !newSettings.customConfig.SUCCESS_REGEX || !newSettings.customConfig.ERROR_REGEX || !newSettings.customConfig.REVOKE_URI || !newSettings.customConfig.REDIRECT_URL)) {
+				} else if (newSettings.loginType == service.LOGIN_TYPE.COOKIE && (!newSettings.customConfig || !newSettings.customConfig.AUTHORIZE_URL || !newSettings.customConfig.SUCCESS_REGEX || !newSettings.customConfig.ERROR_REGEX || !newSettings.customConfig.REVOKE_URL || !newSettings.customConfig.REDIRECT_URL)) {
 					libConfigOK = false;
 					deferred.reject('Complete custom config needed');
 				}
@@ -179,9 +179,9 @@ angular.module('smartcommunitylab.services.login', [])
 		if (settings.loginType == service.LOGIN_TYPE.AAC) {
 			url = settings.aacUrl + AAC.TOKEN_URI;
 			redirectUri = AAC.REDIRECT_URL;
-		} else if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
-			url = settings.customConfig + service.customConfig.TOKEN_URI;
-			redirectUri = settings.customConfig.REDIRECT_URL;
+		} else {
+			deferred.reject('[LOGIN] loginType is not AAC');
+			return deferred.promise;
 		}
 
 		$http.post(url, null, {
@@ -360,7 +360,7 @@ angular.module('smartcommunitylab.services.login', [])
 				}
 			} else if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
 				// TODO cookie
-				authUrl = settings.customConfig.BASE_URL + settings.customConfig.AUTHORIZE_URI + '/' + provider;
+				authUrl = settings.customConfig.AUTHORIZE_URL + '/' + provider;
 				if (token) {
 					authUrl += '?token=' + encodeURIComponent(token);
 				}
@@ -641,7 +641,7 @@ angular.module('smartcommunitylab.services.login', [])
 						}
 					);
 				} else if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
-					$http.get(settings.customConfig.BASE_URL + settings.customConfig.LOGIN_URI, {
+					$http.get(settings.customConfig.LOGIN_URL, {
 						params: {
 							email: credentials.email,
 							password: credentials.password
@@ -834,28 +834,38 @@ angular.module('smartcommunitylab.services.login', [])
 	};
 
 	/*
-	 * registration in the internal AAC
+	 * registration
 	 */
 	service.register = function (user) {
+		// the validation of user has to be done by the developer or server side.
 		var deferred = $q.defer();
 
-		if (!user || !user.name.trim() || !user.surname.trim() || !user.email.trim() || !isEmailValid(user.email) || !user.password.trim()) {
-			deferred.reject();
-			return deferred.promise;
+		var url;
+		if (settings.loginType == service.LOGIN_TYPE.AAC) {
+			url = settings.aacUrl + AAC.REGISTER_URI;
+		} else if (settings.loginType == service.LOGIN_TYPE.COOKIE) {
+			url = settings.customConfig.REGISTER_URL;
+		} else {
+			return;
 		}
 
-		$http.post(settings.aacUrl + AAC.REGISTER_URI, user, {
-			params: {
-				'client_id': settings.clientId,
-				'client_secret': settings.clientSecret,
-			},
+		var httpOptions = {
 			headers: {
 				'Accept': 'application/json',
 				'Content-Type': 'application/json'
 			}
-		}).then(
+		};
+
+		if (settings.loginType == service.LOGIN_TYPE.AAC) {
+			httpOptions.params = {
+				'client_id': settings.clientId,
+				'client_secret': settings.clientSecret
+			};
+		}
+
+		$http.post(url, user, httpOptions).then(
 			function (response) {
-				deferred.resolve();
+				deferred.resolve(response);
 			},
 			function (reason) {
 				deferred.reject(reason);

@@ -30,12 +30,12 @@ angular.module('logindummy', [
 		loginType: LoginService.LOGIN_TYPE.COOKIE,
 		customConfig: {
 			BASE_URL: 'https://tn.smartcommunitylab.it/carpooling',
-			AUTHORIZE_URI: '/userlogin',
+			AUTHORIZE_URL: 'https://tn.smartcommunitylab.it/carpooling/userlogin',
 			SUCCESS_REGEX: /userloginsuccess\?profile=(.+)$/,
 			ERROR_REGEX: /userloginerror\?error=(.+)$/,
-			LOGIN_URI: '/userlogininternal',
-			REGISTER_URI: '/register',
-			REVOKE_URI: '/logout',
+			LOGIN_URL: 'https://tn.smartcommunitylab.it/carpooling/userlogininternal',
+			REGISTER_URL: 'https://tn.smartcommunitylab.it/carpooling/register',
+			REVOKE_URL: 'https://tn.smartcommunitylab.it/carpooling/logout',
 			RESET_URL: 'https://tn.smartcommunitylab.it/carpooling/internal/reset',
 			REDIRECT_URL: 'http://localhost'
 		}
