@@ -101,4 +101,50 @@ The provider can be one of these ```LoginService.PROVIDER``` values:
 * ```LoginService.PROVIDER.FACEBOOK```
 * ```LoginService.PROVIDER.INTERNAL``` (it makes ```credentials``` mandatory)
 
-#in progress...#
+## getUserProfile
+It simply returns the user profile if the user is logged in.
+```javascript
+LoginService.getUserProfile();
+```
+
+## userIsLogged
+It simply returns a ```boolean``` about the user status, ```true``` if logged in, ```false``` if not.
+```javascript
+LoginService.userIsLogged();
+```
+
+## getValidAACtoken
+This method is used when ```loginType``` is ```LoginService.LOGIN_TYPE.AAC```. It refreshes the token if needed. It returns a promise with the token.
+```javascript
+LoginService.getValidAACtoken().then(...);
+```
+
+## Logout
+This method logs the user out from the provider used for the login and clears the user data/token, or clears the cookie. It returns a promise.
+```javascript
+LoginService.logout().then(...);
+```
+
+## register
+This method is used to register a new user in the system, AAC or cookie based. The ```user``` object depends on the server side implementation used! It returns a promise.
+```javascript
+// this user object is just an example!
+var user = {
+	name: 'Jon',
+	surname: 'Snow',
+	email: 'jonsnow@example.com',
+	password: 'ghost'
+};
+
+LoginService.register(user).then(...);
+```
+
+## resetPassword
+This method lets the user change/reset the password if ```loginType``` is ```LoginService.PROVIDER.INTERNAL``` or if he/she wants just to set a password. Right now it opens a window where the user can insert the email address. It returns nothing.
+
+The library is ready to implement an API call: if an email is provided as argument it will be sent without the opening of a browser window. (NOT IMPLEMENTED YET). It will return a promise.
+```javascript
+LoginService.resetPassword();
+// in the future...
+LoginService.resetPassword('jonsnow@example.com').then(...);
+```
