@@ -13,9 +13,14 @@ In order to use the plugin these Cordova plugins are required:
 * **cordova-remove-cookies** https://github.com/bez4pieci/Phonegap-Cookies-Plugin
 
 ### cordova-plugin-googleplus
-On your [Google Developer Console](https://console.developers.google.com/apis/credentials) you need to create three OAuth client IDs: _android_ and _iOS_ just to <u>enable the platforms</u>, ***web application*** as ```webClientId``` (used for Google) and as ```REVERSED_CLIENT_ID``` (writing it reversed...) used in the ```package.json``` when you configure the plugin. Just to be clear:
-* **webClientId**: ```123456789012-ab1cd2ef3gh4ij5kl6mn7op8qr9st0uv.apps.googleusercontent.com```
-* **REVERSED_CLIENT_ID**: ```com.googleusercontent.apps.123456789012-ab1cd2ef3gh4ij5kl6mn7op8qr9st0uv```
+On your [Google Developer Console](https://console.developers.google.com/apis/credentials) you need to create three OAuth client IDs:
+* **_android_** just to enable the platform
+* **_iOS_** to enable the platform and obtain the ```REVERSED_CLIENT_ID``` (also known as the "iOS URL Scheme" on the Developer Console) used in the ```package.json``` when you install the plugin
+* **_web application_** as ```webClientId``` used to get "idToken" or "serverAuthCode" back from the Sign In Process.
+
+Just to be clear:
+* **webClientId**: ```123456789012-34567890123456789012345678901234.apps.googleusercontent.com``` from _web application_
+* **REVERSED_CLIENT_ID**: ```com.googleusercontent.apps.098765432109-87654321098765432109876543210987``` from _iOS_
 
 ### cordova-plugin-facebook4
 On your [Facebook for developers Console](https://developers.facebook.com/apps/) you need to create a new app, <u>enable Android and iOS platforms</u> for the login and make it public or eventually add allowed accounts. Then in the ```package.json``` add app name and app ID (as the instructions say).
