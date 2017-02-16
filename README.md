@@ -15,7 +15,7 @@ In order to use the plugin these Cordova plugins are required:
 ### cordova-plugin-googleplus
 On your [Google Developer Console](https://console.developers.google.com/apis/credentials) you need to create three OAuth client IDs: _android_ and _iOS_ just to <u>enable the platforms</u>, ***web application*** as ```webClientId``` (used for Google) and as ```REVERSED_CLIENT_ID``` (writing it reversed...) used in the ```package.json``` when you configure the plugin. Just to be clear:
 * **webClientId**: ```123456789012-ab1cd2ef3gh4ij5kl6mn7op8qr9st0uv.apps.googleusercontent.com```
-* **REVERSED_CLIEND_ID**: ```com.googleusercontent.apps.123456789012-ab1cd2ef3gh4ij5kl6mn7op8qr9st0uv```
+* **REVERSED_CLIENT_ID**: ```com.googleusercontent.apps.123456789012-ab1cd2ef3gh4ij5kl6mn7op8qr9st0uv```
 
 ### cordova-plugin-facebook4
 On your [Facebook for developers Console](https://developers.facebook.com/apps/) you need to create a new app, <u>enable Android and iOS platforms</u> for the login and make it public or eventually add allowed accounts. Then in the ```package.json``` add app name and app ID (as the instructions say).
